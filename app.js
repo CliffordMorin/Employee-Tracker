@@ -13,14 +13,14 @@ const connection = mysql.createConnection({
   
     // Be sure to update with your own MySQL password!
     password: 'Imagination123$$',
-    database: 'greatBay_DB',
+    database: 'company_db',
 });
 
   //initial start function to call other function
 const start = () => {
     inquirer 
-    prompt({
-        name: 'firstChoice',
+    .prompt([{
+        name: 'options',
         type: 'list', 
         message: 'Choose one of the options below.',
         choices: [
@@ -32,10 +32,10 @@ const start = () => {
             "Add Role?",
             "Add Department?"
         ]
-    })
+    }])
 
     .then((answer) => {
-        switch (answer.firstChoice) {
+        switch (answer.options) {
             case "View all Employees?":
               viewAllEmploy();
             break;
@@ -67,38 +67,103 @@ const start = () => {
     }) 
 };
 
+//View all employees
+const viewAllEmploy = () => {
+    connection.query("Select * FROM employee"), (err, res) => {
+        if(err) throw err;
+        console.log(res);
+        console.table(res);
+        start();
+    }
+
+};
+
+//View all roles
+const viewRoles = () => {
+    connection.query("Select * FROM role"), (err, res) => {
+        if(err) throw err;
+        console.table(res);
+        console.log(res);
+        start();
+    }
+};
+
+//View all roles
+const viewDepart = () => {
+    connection.query("Select * FROM department"), (err, res) => {
+        if(err) throw err;
+        console.table(res);
+        console.log(res);
+        start();
+    }
+};
+
+//Select Role Quieries Role Title for Add Employee Prompt
+roles = []
+const selectRole = () => {
+    connection.query("SELECT * FORM role"), (err, res) => {
+        if(err) throw err;
+        for (let i = 0; i < res.length; i++) {
+            roles.push(res[i].title);
+        }
+    }
+    return roles;
+};
+
+//Select Role Quieries The managers for Add Employee Prompt
+manager = []
+const selectManager = () => {
+    connection.query("SELECT * FORM role"), (err, res) => {
+        if(err) throw err;
+        for (let i = 0; i < res.length; i++) {
+            manager.push(res[i].first_name);
+        }
+    }
+    return manager;
+};
+
+const addEmployee = () => {
+    inquirer 
+    .prompt([
+    {
+        name: 'firstName',
+        type: 'input', 
+        message: 'Please enter employees first name.'
+    },
+    {
+        name: 'lastName',
+        type: 'input',
+        message: 'Please enter employees last name.'
+    },
+    {
+        name: 'role',
+        type: 'list',
+        message: 'What is the employees role?',
+        choices: selectRole() 
+    },
+    {
+        name: 'manager',
+        type: 'list',
+        message: 'What is the employees managers name?',
+        choices: selectManager() 
+    }
+    ])
+    .then((answer) => {
+        console.log(answer);
+    })
+};
+
+// const addRole = () => {
+
+// };
+
+// const addDept = () => {
+
+// };
+
 // connect to the mysql server and sql database
 connection.connect((err) => {
     if (err) throw err;
     // run the start function after the connection is made to prompt the user
     start();
 });
-
-const viewAllEmploy = () => {
-    connection.query("Select * FROM employee"),
-    
-};
-
-const viewRoles = () => {
-    
-};
-
-const viewDepart = () => {
-    
-};
-
-const updateEmployRoles = () => {
-
-};
-
-const addEmployee = () => {
-    
-};
-
-const addRole = () => {
-
-};
-
-const addDept = () => {
-
-};
