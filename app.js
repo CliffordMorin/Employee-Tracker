@@ -78,7 +78,7 @@ const start = () => {
         break;
 
         case "Remove a Department":
-            removeDepartment();
+            removeDept();
         break;
       }
     });
@@ -309,8 +309,39 @@ const removeRole = () => {
 
 //========Remove Department=========//
 
-const removeDepartment = () => {
+const removeDept = () => {
+    connection.query("SELECT * FROM department", (err, departments) => {
+        if (err) throw err;
+        let deleteDepartment = departments.map((department) => ({
+          name: `${department.name}`,
+          value: department.id,
+        }));
+        inquirer
+        .prompt([
+          {
+            name: "department",
+            type: "rawlist",
+            message: "What department would you like to remove?",
+            choices: deleteDepartment,
+          },
+        ])
+        .then((answer) => {
+          connection.query(
+            "DELETE FROM department WHERE ?",
+            {
+              id: answer.department
+            },
 
+            (err, res) => {
+              if (err) throw err;
+              console.log(`${res.affectedRows} department deleted!\n`);
+              // Call start AFTER the INSERT completes
+              start();
+            }
+          );
+        });
+        
+    });
 }
 
 // connect to the mysql server and sql database
