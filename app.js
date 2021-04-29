@@ -28,6 +28,7 @@ const start = () => {
           "View all Employees?",
           "View all Roles?",
           "View all Departments",
+          "Search for Employees by Manager",
           "Update Employee roles",
           "Add Employee?",
           "Add Role?",
@@ -80,6 +81,10 @@ const start = () => {
         case "Remove a Department":
           removeDept();
           break;
+        
+        case "Search for Employees by Manager":
+          viewEmployeesByManager();
+          break;
       }
     });
 };
@@ -110,6 +115,42 @@ const viewDepart = () => {
     start();
   });
 };
+
+//=============View employee by manager========//
+const viewEmployeesByManager = () => {
+  connection.query("SELECT * FROM employee", (err, managers) => {
+    if (err) throw err;
+    let newManager = managers.map((manager) => ({
+      name: `${manager.first_name} ${manager.last_name}`,
+      value: manager.id,
+    }));
+    inquirer
+        .prompt([
+          {
+            name: "manager",
+            type: "rawlist",
+            message: "What is the employees managers name?",
+            choices: newManager,
+          },
+        ])
+        .then((answer) => {
+          connection.query(
+            "SELECT * FROM employee WHERE ?",
+            {
+              manager_id: answer.manager,
+            },
+
+            (err, res) => {
+              if (err) throw err;
+
+              console.table(`${answer.manager} is the manager of these employees: `, res);
+              // Call start AFTER the INSERT completes
+              start();
+            }
+          );
+        });
+  });
+}
 
 //========Add Employee=========//
 const addEmployee = () => {
@@ -404,6 +445,41 @@ const removeDept = () => {
       });
   });
 };
+
+//========== Combined salaries of each department==========//
+const salaries = () => {
+  connection.query("SELECT * FROM department", (err, departments) => {
+    if (err) throw err;
+    let salaryDepartment = departments.map((department) => ({
+      name: `${department.name}`,
+      value: department.id,
+    }));
+    inquirer
+      .prompt([
+        {
+          name: "department",
+          type: "rawlist",
+          message: "What department's total utilized budget would you like to view?",
+          choices: salaryDepartment,
+        },
+      ])
+      .then((answer) => {
+        connection.query(
+          "SELECT  WHERE ?",
+          {
+            name: answer.department,
+          },
+
+          (err, res) => {
+            if (err) throw err;
+            console.log(`${res.affectedRows} department deleted!\n`);
+            // Call start AFTER the INSERT completes
+            start();
+          }
+        );
+      });
+  });
+}
 
 // connect to the mysql server and sql database
 connection.connect((err) => {

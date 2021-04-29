@@ -4,3 +4,5 @@ CREATE TABLE department (
     PRIMARY KEY(id)
 );
 
+
+
