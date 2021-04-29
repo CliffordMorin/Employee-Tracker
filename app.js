@@ -27,7 +27,7 @@ const start = () => {
         choices: [
           "View all Employees?",
           "View all Roles?",
-          "View all Department's",
+          "View all Departments",
           "Update Employee roles",
           "Add Employee?",
           "Add Role?",
@@ -49,7 +49,7 @@ const start = () => {
           viewRoles();
           break;
 
-        case "View all Department's":
+        case "View all Departments":
           viewDepart();
           break;
 
