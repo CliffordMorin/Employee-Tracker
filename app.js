@@ -30,12 +30,14 @@ const start = () => {
           "View all Departments",
           "Search for Employees by Manager",
           "Update Employee roles",
+          "Update Employees manager",
           "Add Employee?",
           "Add Role?",
           "Add Department?",
           "Remove an Employee",
           "Remove a Role",
           "Remove a Department",
+          "Get Department's total utilized budget"
         ],
       },
     ])
@@ -54,8 +56,16 @@ const start = () => {
           viewDepart();
           break;
 
+        case "Search for Employees by Manager":
+          viewEmployeesByManager();
+          break;
+
         case "Update Employee roles":
           updateEmployRoles();
+          break;
+
+        case "Update Employees manager":
+          updateEmployManager();
           break;
 
         case "Add Employee?":
@@ -81,9 +91,9 @@ const start = () => {
         case "Remove a Department":
           removeDept();
           break;
-        
-        case "Search for Employees by Manager":
-          viewEmployeesByManager();
+
+        case "Get Department's total utilized budget":
+          salaries();
           break;
       }
     });
@@ -125,32 +135,35 @@ const viewEmployeesByManager = () => {
       value: manager.id,
     }));
     inquirer
-        .prompt([
+      .prompt([
+        {
+          name: "manager",
+          type: "rawlist",
+          message: "What is the employees managers name?",
+          choices: newManager,
+        },
+      ])
+      .then((answer) => {
+        connection.query(
+          "SELECT * FROM employee WHERE ?",
           {
-            name: "manager",
-            type: "rawlist",
-            message: "What is the employees managers name?",
-            choices: newManager,
+            manager_id: answer.manager,
           },
-        ])
-        .then((answer) => {
-          connection.query(
-            "SELECT * FROM employee WHERE ?",
-            {
-              manager_id: answer.manager,
-            },
 
-            (err, res) => {
-              if (err) throw err;
+          (err, res) => {
+            if (err) throw err;
 
-              console.table(`${answer.manager} is the manager of these employees: `, res);
-              // Call start AFTER the INSERT completes
-              start();
-            }
-          );
-        });
+            console.table(
+              `${answer.manager} is the manager of these employees: `,
+              res
+            );
+            // Call start AFTER the INSERT completes
+            start();
+          }
+        );
+      });
   });
-}
+};
 
 //========Add Employee=========//
 const addEmployee = () => {
@@ -289,9 +302,9 @@ const addDept = () => {
 const updateEmployRoles = () => {
   connection.query("SELECT * FROM roles", (err, roles) => {
     if (err) throw err;
-    let newRoles = roles.map((role) => ({ 
-        name: role.title, 
-        value: role.id 
+    let newRoles = roles.map((role) => ({
+      name: role.title,
+      value: role.id,
     }));
 
     connection.query("SELECT * FROM employee", (err, employees) => {
@@ -338,76 +351,130 @@ const updateEmployRoles = () => {
   });
 };
 
-//========Remove Employee=========//
+//=======Update Employee Manager========//
+const updateEmployManager = () => {
+  connection.query("SELECT * FROM employee", (err, managers) => {
+    if (err) throw err;
+    let newManagers = managers.map((manager) => ({
+      name: manager.title,
+      value: manager.id,
+    }));
 
-const removeEmployee = () => {
     connection.query("SELECT * FROM employee", (err, employees) => {
-        if (err) throw err;
-        let deleteEmployee = employees.map((employee) => ({
-          name: `${employee.first_name} ${employee.last_name}`,
-          value: employee.id,
-        }));
-        inquirer
-          .prompt([
-            {
-              name: "employee",
-              type: "rawlist",
-              message: "Which employee would you like to remove?",
-              choices: deleteEmployee,
-            },
-          ])
-          .then((answer) => {
-            connection.query(
-              "DELETE FROM employee WHERE ?",
+      if (err) throw err;
+      let newEmployee = employees.map((employee) => ({
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      }));
+      inquirer
+        .prompt([
+          {
+            name: "employee",
+            type: "rawlist",
+            message: "Which employee do you want to update?",
+            choices: newEmployee,
+          },
+          {
+            name: "role",
+            type: "rawlist",
+            message: "What is the employees new manager?",
+            choices: newManagers,
+          },
+        ])
+        .then((answer) => {
+          connection.query(
+            "UPDATE employee SET ? WHERE ?",
+            [
+              {
+                manager_id: answer.manager,
+              },
               {
                 id: answer.employee,
               },
-    
-              (err, res) => {
-                if (err) throw err;
-                console.log(`${res.affectedRows} employee deleted!\n`);
-                // Call start AFTER the INSERT completes
-                start();
-              }
-            );
-          });
+            ],
+            (err, res) => {
+              if (err) throw err;
+              console.log(`${res.affectedRows} new manager inserted!\n`);
+              console.table(res);
+              // Call start AFTER the INSERT completes
+              start();
+            }
+          );
+        });
+    });
+  });
+};
+
+//========Remove Employee=========//
+
+const removeEmployee = () => {
+  connection.query("SELECT * FROM employee", (err, employees) => {
+    if (err) throw err;
+    let deleteEmployee = employees.map((employee) => ({
+      name: `${employee.first_name} ${employee.last_name}`,
+      value: employee.id,
+    }));
+    inquirer
+      .prompt([
+        {
+          name: "employee",
+          type: "rawlist",
+          message: "Which employee would you like to remove?",
+          choices: deleteEmployee,
+        },
+      ])
+      .then((answer) => {
+        connection.query(
+          "DELETE FROM employee WHERE ?",
+          {
+            id: answer.employee,
+          },
+
+          (err, res) => {
+            if (err) throw err;
+            console.log(`${res.affectedRows} employee deleted!\n`);
+            // Call start AFTER the INSERT completes
+            start();
+          }
+        );
       });
+  });
 };
 
 //========Remove Role=========//
 
 const removeRole = () => {
-    connection.query("SELECT * FROM roles", (err, roles) => {
-        if (err) throw err;
-        let deleteRole = roles.map((role) => ({ 
-            name: role.title, 
-            value: role.id 
-        }));
-        inquirer
-          .prompt([
-            {
-              name: "role",
-              type: "rawlist",
-              message: "Which role would you like to remove?",
-              choices: deleteRole,
-            },
-          ])
-          .then((answer) => {
-            connection.query(
-              "DELETE FROM roles WHERE ?",
-              {
-                id: answer.role,
-              },
-    
-              (err, res) => {
-                if (err) throw err;
-                console.log(`${res.affectedRows} role deleted!\n`);
-                // Call start AFTER the INSERT completes
-                start();
-              }
-            );
-          });
-        });
+  connection.query("SELECT * FROM roles", (err, roles) => {
+    if (err) throw err;
+    let deleteRole = roles.map((role) => ({
+      name: role.title,
+      value: role.id,
+    }));
+    inquirer
+      .prompt([
+        {
+          name: "role",
+          type: "rawlist",
+          message: "Which role would you like to remove?",
+          choices: deleteRole,
+        },
+      ])
+      .then((answer) => {
+        connection.query(
+          "DELETE FROM roles WHERE ?",
+          {
+            id: answer.role,
+          },
+
+          (err, res) => {
+            if (err) throw err;
+            console.log(`${res.affectedRows} role deleted!\n`);
+            // Call start AFTER the INSERT completes
+            start();
+          }
+        );
+      });
+  });
 };
 
 //========Remove Department=========//
@@ -459,27 +526,28 @@ const salaries = () => {
         {
           name: "department",
           type: "rawlist",
-          message: "What department's total utilized budget would you like to view?",
+          message:
+            "What department's total utilized budget would you like to view?",
           choices: salaryDepartment,
         },
       ])
       .then((answer) => {
         connection.query(
-          "SELECT  WHERE ?",
+          "SELECT SUM(salary) FROM roles WHERE ?",
           {
-            name: answer.department,
+            department_id: answer.department,
           },
 
           (err, res) => {
             if (err) throw err;
-            console.log(`${res.affectedRows} department deleted!\n`);
+            console.table(res);
             // Call start AFTER the INSERT completes
             start();
           }
         );
       });
   });
-}
+};
 
 // connect to the mysql server and sql database
 connection.connect((err) => {
