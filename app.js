@@ -132,7 +132,7 @@ const viewEmployeesByManager = () => {
     if (err) throw err;
     let newManager = managers.map((manager) => ({
       name: `${manager.first_name} ${manager.last_name}`,
-      value: manager.id,
+      value: `${manager.id}: ${manager.first_name} ${manager.last_name}`
     }));
     inquirer
       .prompt([
@@ -144,21 +144,22 @@ const viewEmployeesByManager = () => {
         },
       ])
       .then((answer) => {
+        newManager = answer.manager.split(":");
         connection.query(
           "SELECT * FROM employee WHERE ?",
           {
-            manager_id: answer.manager,
+            manager_id: newManager[0],
           },
 
           (err, res) => {
             if (err) throw err;
-
-            console.table(
-              `${answer.manager} is the manager of these employees: `,
-              res
-            );
-            // Call start AFTER the INSERT completes
-            start();
+              console.table(
+                `${newManager[1]} is the manager of these employees: `,
+                res
+              );
+              // Call start AFTER the INSERT completes
+              start();
+            
           }
         );
       });
@@ -356,7 +357,7 @@ const updateEmployManager = () => {
   connection.query("SELECT * FROM employee", (err, managers) => {
     if (err) throw err;
     let newManagers = managers.map((manager) => ({
-      name: manager.title,
+      name: `${manager.first_name} ${manager.last_name}`,
       value: manager.id,
     }));
 
@@ -375,13 +376,14 @@ const updateEmployManager = () => {
             choices: newEmployee,
           },
           {
-            name: "role",
+            name: "manager",
             type: "rawlist",
             message: "What is the employees new manager?",
             choices: newManagers,
           },
         ])
         .then((answer) => {
+          // console.log(answer.manager, answer.employee );
           connection.query(
             "UPDATE employee SET ? WHERE ?",
             [
@@ -533,7 +535,7 @@ const salaries = () => {
       ])
       .then((answer) => {
         connection.query(
-          "SELECT SUM(salary) FROM roles WHERE ?",
+          "SELECT SUM(salary) AS budget FROM roles WHERE ?",
           {
             department_id: answer.department,
           },
