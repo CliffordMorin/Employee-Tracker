@@ -37,7 +37,7 @@ const start = () => {
           "Remove an Employee",
           "Remove a Role",
           "Remove a Department",
-          "Get Department's total utilized budget"
+          "Get Department's total utilized budget",
         ],
       },
     ])
@@ -132,7 +132,7 @@ const viewEmployeesByManager = () => {
     if (err) throw err;
     let newManager = managers.map((manager) => ({
       name: `${manager.first_name} ${manager.last_name}`,
-      value: `${manager.id}: ${manager.first_name} ${manager.last_name}`
+      value: `${manager.id}: ${manager.first_name} ${manager.last_name}`,
     }));
     inquirer
       .prompt([
@@ -153,13 +153,12 @@ const viewEmployeesByManager = () => {
 
           (err, res) => {
             if (err) throw err;
-              console.table(
-                `${newManager[1]} is the manager of these employees: `,
-                res
-              );
-              // Call start AFTER the INSERT completes
-              start();
-            
+            console.table(
+              `${newManager[1]} is the manager of these employees: `,
+              res
+            );
+            // Call start AFTER the INSERT completes
+            start();
           }
         );
       });
